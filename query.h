@@ -13,6 +13,8 @@ typedef struct query query;
 typedef struct join_query join_query;
 typedef struct condition condition;
 typedef struct column_to_update column_to_update;
+typedef struct table_to_join table_to_join;
+
 union type_value;
 
 
@@ -25,6 +27,15 @@ struct query {
     char** viewCols;
     char* table;
     condition* condition;
+};
+
+struct table_to_join {
+    table* tb;
+    uint8_t num_cols;
+    char** view_cols;
+    condition* cond;
+
+    column* col_to_join;
 };
 
 struct column_to_update {
@@ -53,12 +64,25 @@ union type_value {
     char* s;
 };
 
-void select_records_from_table(uint8_t num_cols, char** view_cols, condition* condition, table* tb, database* db, FILE* f);
+void select_records_from_table(uint8_t num_cols, char** view_cols, condition* condition, table* tb, database* db, FILE* f, FILE* output);
 void update_records_in_table(column_to_update* col, condition* cond, table* tb, database* db, FILE* f);
 void delete_records_from_table(condition* cond, table* tb, database* db, FILE* f);
+void select_records_from_table_inner_join(table_to_join* left, table_to_join* right, database* db, FILE* f, FILE* output);
 
 condition* create_integer_condition(char* name, enum relation relation, int32_t val);
+condition* create_float_condition(char* name, enum relation relation, float val);
+condition* create_bool_condition(char* name, enum relation relation, bool val);
+condition* create_string_condition(char* name, enum relation relation, char* val);
 
 column_to_update* create_integer_column_to_update(char* name, int32_t val);
+column_to_update* create_float_column_to_update(char* name, float val);
+column_to_update* create_bool_column_to_update(char* name, bool val);
+column_to_update* create_string_column_to_update(char* name, char* val);
+
+table_to_join* create_table_to_join(table* tb,
+                                    uint8_t num_cols,
+                                    char** view_cols,
+                                    condition* cond,
+                                    column* col_to_join);
 
 #endif //LABDB_QUERY_H

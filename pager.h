@@ -20,7 +20,7 @@ struct page {
 /* Initialization and Closing of the page struct that contains internal byte buffer */
 
 page* allocate_page(uint16_t size);
-void deallocate_page(page* page);
+void destroy_page(page* page);
 
 
 void write_page_to_file(FILE* f, page* pg, uint32_t block_id);

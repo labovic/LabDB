@@ -13,7 +13,7 @@ column* create_column(char* name,
                       enum data_type type,
                               uint8_t size) {
 
-    column* col = malloc(sizeof(column));
+    column* col = calloc(1, sizeof(column));
     strcpy(col->name, name);
     col->type = type;
     col->size = size;
@@ -27,7 +27,7 @@ void destroy_column(column* col) {
 
 column** create_columns(column* args, ...) {
     uint8_t sz = args->size;
-    column** cols = malloc(sizeof(column) * sz);
+    column** cols = calloc(1, sizeof(column) * sz);
     va_list ap;
     va_start(ap, args);
     cols[0] = args;
@@ -41,7 +41,7 @@ column** create_columns(column* args, ...) {
 table* create_table(char* name,
                     uint8_t num_columns,
                     column** cols) {
-    table* tb = malloc(sizeof(table));
+    table* tb = calloc(1, sizeof(table));
     strcpy(tb->name, name);
     tb->num_columns = num_columns;
     tb->columns = cols;
@@ -56,13 +56,14 @@ table destroy_table(table* tb) {
 record* create_record(table* tb) {
     uint32_t sz = get_columns_size(tb);
 
-    uint8_t* data = malloc(sz);
-    record* r = malloc(sizeof(record));
+    uint8_t* data = calloc(1, sz);
+    record* r = calloc(1, sizeof(record));
     r->data = data;
 }
 
 
 void destroy_record(record* r) {
+    free(r->data);
     free(r);
 }
 
@@ -160,7 +161,7 @@ bool get_boolean_record(table* tb, record* r, char* column_name) {
 }
 
 char* get_string_record(table* tb, record* r, char* column_name) {
-    char* s = malloc(get_column_size_by_name(tb, column_name));
+    char* s = calloc(1, get_column_size_by_name(tb, column_name));
     uint32_t offset = get_column_offset_by_name(tb, column_name);
     memcpy(s, r->data + offset, get_column_size_by_name(tb, column_name));
     return s;
@@ -170,7 +171,7 @@ char* get_string_record(table* tb, record* r, char* column_name) {
 
 char* integer_to_string(uint32_t value, char* dest){
     size_t size = snprintf(NULL, 0, " %d |", value)+1;
-    char* temp = malloc(size);
+    char* temp = calloc(1, size);
     snprintf(temp, size, " %d |", value);
 
     dest = realloc(dest, strlen(dest) + strlen(temp) + 1);
@@ -182,7 +183,7 @@ char* integer_to_string(uint32_t value, char* dest){
 
 char* float_to_string(float value, char* dest){
     size_t size = snprintf(NULL, 0, " %.5f |", value)+1;
-    char* temp = malloc(size);
+    char* temp = calloc(1, size);
     snprintf(temp, size, " %.5f |", value);
 
     dest = realloc(dest, strlen(dest) + strlen(temp) + 1);
@@ -208,8 +209,21 @@ char*  bool_to_string(bool value, char* dest) {
 char* string_to_string(char* value, char* dest){
 
     size_t size = snprintf(NULL, 0, " %s |", value)+1;
-    char* temp = malloc(size);
+    char* temp = calloc(1, size);
     snprintf(temp, size, " %s |", value);
+
+    dest = realloc(dest, strlen(dest) + strlen(temp) + 1);
+    strcat(dest, temp);
+    free(temp);
+
+    return dest;
+}
+
+char* simp_str_str(char* value, char* dest){
+
+    size_t size = snprintf(NULL, 0, "%s", value)+1;
+    char* temp = calloc(1, size);
+    snprintf(temp, size, "%s", value);
 
     dest = realloc(dest, strlen(dest) + strlen(temp) + 1);
     strcat(dest, temp);

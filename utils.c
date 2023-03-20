@@ -11,16 +11,16 @@ struct timeval getCurrentTime()
     return ts;
 }
 
-long long timediff_microseconds(struct timeval start, struct timeval end) {
-    long long sec1 = start.tv_sec;
-    long long sec2 = end.tv_sec;
-    long long ns1 = start.tv_usec;
-    long long ns2 = end.tv_usec;
+float time_diff_microseconds(struct timeval start, struct timeval end) {
+    long long sec1 = start.tv_sec * 1000000;
+    long long sec2 = end.tv_sec * 1000000;
+    long long ms1 = start.tv_usec;
+    long long ms2 = end.tv_usec;
 
-    if (ns2 > ns1) {
-        return (sec2 - sec1) * 1000000 + (ns2 - ns1) / 1000;
-    } else {
-        return (sec2 - sec1 - 1) * 1000000 + (NANOS_IN_SECOND + ns2 - ns1) / 1000;
-    }
+    sec1 += ms1;
+    sec2 += ms2;
+
+    return (float)(sec2 - sec1)/1000000;
+
 }
 

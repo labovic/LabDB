@@ -65,7 +65,9 @@ char* integer_to_string(uint32_t value, char* string);
 char* float_to_string(float value, char* string);
 char* bool_to_string(bool value, char* string);
 char* string_to_string(char* value, char* string);
+char* simp_str_str(char* value, char* string);
 
 uint32_t get_record_size(table* tb);
+
 
 #endif //LABDB_TABLE_H

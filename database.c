@@ -8,7 +8,8 @@
 #include "table.h"
 
 block* create_block(enum block_type type, uint32_t id, int32_t next_id) {
-    block* blk = malloc(sizeof (block));
+    block* blk = calloc(1, sizeof(block));
+
     blk->type=type;
     blk->id=id;
     blk->next_id=next_id;
@@ -21,7 +22,7 @@ void destroy_block(block* blk) {
 
 database* create_database(char* name,
                           uint32_t block_size) {
-    database* db = malloc(sizeof(database));
+    database* db = calloc(1, sizeof(database));
 
     db->blk = create_block(DATABASE, 0, 1);
 

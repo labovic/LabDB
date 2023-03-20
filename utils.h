@@ -9,6 +9,6 @@
 #include <time.h>
 
 struct timeval getCurrentTime();
-long long timediff_microseconds(struct timeval start, struct timeval end);
+float time_diff_microseconds(struct timeval start, struct timeval end);
 
 #endif //LABDB_UTILS_H

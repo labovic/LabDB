@@ -11,23 +11,25 @@
 
 /* Initialization and Closing of the page struct that contains internal byte buffer */
 page* allocate_page(uint16_t size) {
-    uint8_t* buffer = malloc(size);
-    page* pg = malloc(sizeof(page));
+    uint8_t* buffer = calloc(1, size);
+    page* pg = calloc(1, sizeof(page));
     pg->buffer = buffer;
     pg->size = size;
     pg->next = NULL;
     return pg;
 }
 
-void deallocate_page(page* page) {
+void destroy_page(page* page) {
     free(page->buffer);
     free(page);
 }
 /* Page and File */
 
 void write_page_to_file(FILE* f, page* pg, uint32_t block_id) {
-    fseek(f, block_id * pg->size,SEEK_SET);
-    fwrite(pg->buffer, pg->size,1,f);
+    if(pg != NULL) {
+        fseek(f, block_id * pg->size, SEEK_SET);
+        fwrite(pg->buffer, pg->size, 1, f);
+    }
 }
 
 void read_page_from_file(FILE* f, page* pg, uint32_t block_id) {
@@ -42,7 +44,7 @@ void write_block_to_page(block* blk, page* pg) {
 }
 
 block* read_block_from_page(page* pg) {
-    block* blk = malloc(sizeof(block));
+    block* blk = calloc(1, sizeof(block));
     memcpy(blk, pg->buffer, sizeof(block));
     return blk;
 }
@@ -55,9 +57,9 @@ void write_database_to_page(database* db, page* pg, uint16_t offset){
 }
 
 database* read_database_from_page(page* pg, uint16_t offset){
-    block* blk = malloc(sizeof (block));
+    block* blk = calloc(1, sizeof (block));
     memcpy(blk, pg->buffer, offset);
-    database* db = malloc(sizeof (database));
+    database* db = calloc(1, sizeof (database));
     memcpy(db, pg->buffer+offset, sizeof(database)-sizeof (block*));
     offset += sizeof(database);
     blk->offset = offset;
@@ -65,7 +67,7 @@ database* read_database_from_page(page* pg, uint16_t offset){
 }
 
 void initialize_first_free_block(database* db, FILE* f) {
-    block* blk = malloc(sizeof(block));
+    block* blk = calloc(1, sizeof(block));
     page* fbl_pg = allocate_page(db->block_size);
 
     blk->type = FREE;
@@ -77,7 +79,7 @@ void initialize_first_free_block(database* db, FILE* f) {
     write_page_to_file(f, fbl_pg, blk->id);
 
     free(blk);
-    free(fbl_pg);
+    destroy_page(fbl_pg);
 }
 
 /* Table and Page */
@@ -95,16 +97,16 @@ uint32_t write_table_to_page(table* tb, page* pg, uint16_t offset){
 }
 
 table* read_table_from_page(page* pg, uint16_t offset){
-    table* tb = malloc(sizeof(table));
+    table* tb = calloc(1, sizeof(table));
     uint32_t table_size = sizeof(table)-sizeof(column**);
     memcpy(tb, pg->buffer + offset, table_size);
     offset += table_size;
 
-    column** cols = malloc(sizeof(column)*tb->num_columns);
+    column** cols = calloc(1, sizeof(column)*tb->num_columns);
     tb->columns = cols;
 
     for(int i = 0; i < tb->num_columns; i++) {
-        column* col = malloc(sizeof(column));
+        column* col = calloc(1, sizeof(column));
         memcpy(col, pg->buffer+offset, sizeof(column));
         tb->columns[i] = col;
         offset += sizeof(column);
@@ -115,9 +117,10 @@ table* read_table_from_page(page* pg, uint16_t offset){
 /* Records and Page */
 
 uint32_t write_record_to_page(record* r, page* pg, uint16_t offset, uint16_t size){
+    uint32_t sz = size + sizeof(bool);
     memcpy(pg->buffer + offset, &(r->valid), sizeof(bool));
     memcpy(pg->buffer + offset + sizeof(bool), r->data, size);
-    return size;
+    return sz;
 }
 
 record* read_record_from_page(table* tb, page* pg, uint16_t offset){
@@ -131,7 +134,7 @@ record* read_record_from_page(table* tb, page* pg, uint16_t offset){
 
 page* load_first_schema_block_to_page(database* db) {
     page* pg = allocate_page(db->block_size);
-    block* blk = malloc(sizeof(block));
+    block* blk = calloc(1, sizeof(block));
 
     blk->type = SCHEMA;
     blk->id = db->schema_first_block_id;
@@ -147,7 +150,7 @@ void initialize_schema(database* db, FILE* f) {
     initialize_first_free_block(db, f);
     page* pg = load_first_schema_block_to_page(db);
     write_page_to_file(f, pg, db->schema_first_block_id);
-    free(pg);
+    destroy_page(pg);
 }
 
 /* Table and Database */
@@ -168,12 +171,13 @@ void get_empty_scheme_block(database* db, block* blk, page* pg, FILE* f) {
     if (tmp_blk->id == tmp_blk->next_id) {
         db->first_clean_block = db->block_num;
         db->block_num++;
+        initialize_first_free_block(db, f);
     } else {
         db->first_clean_block = tmp_blk->next_id;
     }
 
     free(tmp_blk);
-    free(tmp_pg);
+    destroy_page(tmp_pg);
 }
 
 void return_empty_schema_block(database* db, block* blk, FILE* f){
@@ -190,12 +194,12 @@ void return_empty_schema_block(database* db, block* blk, FILE* f){
     write_database_to_page(db, tmp_pg, sizeof(block));
     write_page_to_file(f, tmp_pg, 0);
 
-    free(tmp_pg);
+    destroy_page(tmp_pg);
 }
 
 void get_next_block(uint32_t next_id, block* blk, page* pg, FILE* f) {
     read_page_from_file(f, pg, next_id);
-    block* new_blk = malloc(sizeof(block));
+    block* new_blk = calloc(1, sizeof(block));
     memcpy(new_blk, pg->buffer, sizeof(block));
 
     blk->offset = new_blk->offset;
@@ -225,7 +229,7 @@ void insert_table_to_schema(table* tb, database* db, FILE* f) {
     write_page_to_file(f, pg, 0);
 
     free(blk);
-    free(pg);
+    destroy_page(pg);
 }
 
 table* get_table_from_schema(char* name, database* db, FILE* f) {
@@ -241,7 +245,7 @@ table* get_table_from_schema(char* name, database* db, FILE* f) {
             tb = read_table_from_page(pg, off);
             if(!strcmp(name, tb->name)) {
                 free(blk);
-                free(pg);
+                destroy_page(pg);
                 return tb;
             }
             off += get_real_table_size(tb);
@@ -253,7 +257,7 @@ table* get_table_from_schema(char* name, database* db, FILE* f) {
     }
 
     free(blk);
-    free(pg);
+    destroy_page(pg);
     return NULL;
 }
 
@@ -299,7 +303,7 @@ void write_to_last_record_block(FILE* f, page* curr_pg, block* curr_blk, page* l
     page* db_pg = allocate_page(db->block_size);
     write_database_to_page(db, db_pg, sizeof(block));
     write_page_to_file(f, db_pg, 0);
-    free(db_pg);
+    destroy_page(db_pg);
 
 }
 
@@ -381,7 +385,7 @@ bool delete_table_from_schema(char* name, database* db, FILE* f) {
                     write_page_to_file(f, pre_pg, pre_id);
 
                     free(pre_blk);
-                    free(pre_pg);
+                    destroy_page(pre_pg);
                 } else {
                     db->schema_first_block_id = curr_blk->next_id;
                 }
@@ -395,8 +399,8 @@ bool delete_table_from_schema(char* name, database* db, FILE* f) {
 
                 free(curr_blk);
                 free(last_blk);
-                free(curr_pg);
-                free(last_pg);
+                destroy_page(curr_pg);
+                destroy_page(last_pg);
 
                 return true;
             }
@@ -411,8 +415,8 @@ bool delete_table_from_schema(char* name, database* db, FILE* f) {
 
     free(curr_blk);
     free(last_blk);
-    free(curr_pg);
-    free(last_pg);
+    destroy_page(curr_pg);
+    destroy_page(last_pg);
 
     return false;
 }
@@ -435,12 +439,13 @@ void get_empty_record_block(table* tb, database* db, block* blk, page* pg, FILE*
     if (tmp_blk->id == tmp_blk->next_id) {
         db->first_clean_block = db->block_num;
         db->block_num++;
+        initialize_first_free_block(db, f);
     } else {
         db->first_clean_block = tmp_blk->next_id;
     }
 
     free(tmp_blk);
-    free(tmp_pg);
+    destroy_page(tmp_pg);
 }
 
 void initialize_table_record_block(table* tb, database* db, FILE* f) {
@@ -459,6 +464,7 @@ void initialize_table_record_block(table* tb, database* db, FILE* f) {
     if (blk->id == blk->next_id) {
         db->first_clean_block = db->block_num;
         db->block_num++;
+        initialize_first_free_block(db, f);
     } else {
         db->first_clean_block = blk->next_id;
     }
@@ -468,7 +474,7 @@ void initialize_table_record_block(table* tb, database* db, FILE* f) {
 
 
     free(blk);
-    free(pg);
+    destroy_page(pg);
 }
 
 void insert_record_to_table(record* r, table* tb, database* db, FILE* f) {
@@ -481,7 +487,7 @@ void insert_record_to_table(record* r, table* tb, database* db, FILE* f) {
         get_empty_record_block(tb, db, blk, pg, f);
     }
     r->valid = true;
-    blk->offset += write_record_to_page(r, pg, blk->offset, get_record_size(tb));
+    blk->offset += write_record_to_page(r, pg, blk->offset, get_columns_size(tb));
     tb->num_rows++;
 
     write_block_to_page(blk, pg);
@@ -490,7 +496,7 @@ void insert_record_to_table(record* r, table* tb, database* db, FILE* f) {
     write_page_to_file(f, pg, 0);
 
     free(blk);
-    free(pg);
+    destroy_page(pg);
 }
 
 
