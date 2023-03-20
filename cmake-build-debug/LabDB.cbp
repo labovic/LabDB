@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="LabDB"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="LabDB">
+				<Option output="/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/LabDB" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/11/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 LabDB"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="LabDB/fast">
+				<Option output="/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/LabDB" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/11/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 LabDB/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/mnt/c/Users/Stefan/CLionProjects/LabDB/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/database.c">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/database.h">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/main.c">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/pager.c">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/pager.h">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/query.c">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/query.h">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/table.c">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/table.h">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/utils.c">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/utils.h">
+			<Option target="LabDB"/>
+		</Unit>
+		<Unit filename="/mnt/c/Users/Stefan/CLionProjects/LabDB/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
