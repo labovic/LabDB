@@ -1,1 +1,0 @@
-/usr/bin/cc -g CMakeFiles/LabDB.dir/main.c.o CMakeFiles/LabDB.dir/pager.c.o CMakeFiles/LabDB.dir/table.c.o CMakeFiles/LabDB.dir/database.c.o CMakeFiles/LabDB.dir/utils.c.o CMakeFiles/LabDB.dir/query.c.o -o LabDB 
