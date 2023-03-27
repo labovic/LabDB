@@ -221,6 +221,8 @@ void insert_table_to_schema(table* tb, database* db, FILE* f) {
         get_empty_scheme_block(db, blk, pg, f);
     }
     tb->valid = true;
+    tb->block_id = blk->id;
+    tb->offset = blk->offset;
 
     blk->offset = write_table_to_page(tb, pg, blk->offset);
     write_block_to_page(blk, pg);
@@ -472,6 +474,9 @@ void initialize_table_record_block(table* tb, database* db, FILE* f) {
     write_block_to_page(blk, pg);
     write_page_to_file(f, pg, blk->id);
 
+    read_page_from_file(f, pg, tb->block_id);
+    write_table_to_page(tb, pg, tb->offset);
+    write_page_to_file(f, pg, tb->block_id);
 
     free(blk);
     destroy_page(pg);
@@ -494,6 +499,10 @@ void insert_record_to_table(record* r, table* tb, database* db, FILE* f) {
     write_page_to_file(f, pg, blk->id);
     write_database_to_page(db, pg, sizeof(block));
     write_page_to_file(f, pg, 0);
+
+    read_page_from_file(f, pg, tb->block_id);
+    write_table_to_page(tb, pg, tb->offset);
+    write_page_to_file(f, pg, tb->block_id);
 
     free(blk);
     destroy_page(pg);

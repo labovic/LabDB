@@ -25,6 +25,8 @@ struct column {
 struct table{
     bool valid;
     char name[MAX_NAME_LENGTH];
+    uint32_t block_id;
+    uint32_t offset;
     uint32_t first_record_block_id;
     uint32_t last_record_block_id;
     uint32_t num_rows;

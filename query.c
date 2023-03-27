@@ -769,6 +769,10 @@ void delete_records_from_table(condition* cond, table* tb, database* db, FILE* f
     }
     tb->num_rows -= deleted_rows;
 
+    page* pg = allocate_page(db->block_size);
+    read_page_from_file(f, pg, tb->block_id);
+    write_table_to_page(tb, pg, tb->offset);
+    write_page_to_file(f, pg, tb->block_id);
 }
 
 
