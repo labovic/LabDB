@@ -248,17 +248,22 @@ bool check_strings(char* first, char* second, enum relation rel){
     return false;
 }
 
-void select_records_from_table(uint8_t num_cols, char** view_cols, condition* cond, table* tb, database* db, FILE* f, FILE* fp) {
-
-    page* curr_pg = allocate_page(db->block_size);
-    read_page_from_file(f, curr_pg, tb->first_record_block_id);
-    block* curr_blk = read_block_from_page(curr_pg);
-
+uint32_t select_records_from_table(uint32_t block_offset, char* buffer, uint32_t buff_sz, uint8_t num_cols, char** view_cols,
+                                   condition* cond, table* tb, database* db, FILE* f) {
+    uint32_t buffer_offset = 0;
+    page *curr_pg = allocate_page(db->block_size);
     uint32_t off = sizeof(block);
+    if(block_offset==0) {
+        read_page_from_file(f, curr_pg, tb->first_record_block_id);
+    } else {
+        read_page_from_file(f, curr_pg, block_offset/db->block_size);
+        off = block_offset % db->block_size;
+    }
+
+    block *curr_blk = read_block_from_page(curr_pg);
 
     char* string = calloc(1, 2);
-
-    for(uint32_t read_rows=0; read_rows < tb->num_rows; read_rows++){
+    while((curr_blk->id != tb->last_record_block_id) || (off < curr_blk->offset)){
         if(off >= curr_blk->offset){
             off = sizeof(block);
             get_next_block(curr_blk->next_id, curr_blk, curr_pg, f);
@@ -325,31 +330,47 @@ void select_records_from_table(uint8_t num_cols, char** view_cols, condition* co
         }
 
         if(flag) {
-            fprintf(fp, "%s", string);
-            fprintf(fp, "\n");
+            if(buffer_offset < buff_sz){
+                memcpy(buffer+buffer_offset, string, strlen(string));
+                buffer_offset += strlen(string);
+                memcpy(buffer + buffer_offset, "\n", strlen("\n"));
+                buffer_offset += strlen("\n");
+                if(strlen(string) + 1 + buffer_offset >= buff_sz){
+                    memcpy(buffer + buffer_offset, "\0", strlen("\0"));
+                    return off + curr_blk->id * db->block_size;
+                }
+            }
         }
         destroy_record(r);
     }
     free(string);
     free(curr_blk);
     destroy_page(curr_pg);
+    return 0;
 }
 
-void select_records_from_table_inner_join(table_to_join* left, table_to_join* right, database* db, FILE* f, FILE* fp) {
+void select_records_from_table_inner_join(uint32_t* left_block_off, uint32_t* right_block_off, char* buffer, uint32_t buff_sz,
+                                          table_to_join* left, table_to_join* right, database* db, FILE* f) {
+    uint32_t buffer_offset = 0;
 
     table* left_table = left->tb;
     page* left_pg = allocate_page(db->block_size);
-    read_page_from_file(f, left_pg, left_table->first_record_block_id);
+    uint32_t left_off = sizeof(block);
+    if(*left_block_off==0) {
+        read_page_from_file(f, left_pg, left_table->first_record_block_id);
+    } else {
+        read_page_from_file(f, left_pg, *left_block_off/db->block_size);
+        left_off = *left_block_off % db->block_size;
+    }
     block* left_blk = read_block_from_page(left_pg);
+
 
     table* right_table = right->tb;
     page* right_pg = allocate_page(db->block_size);
 
-    uint32_t left_off = sizeof(block);
-
     char* string = calloc(1, 2);
 
-    for(uint32_t left_read_rows=0; left_read_rows < left_table->num_rows; left_read_rows++){
+    while((left_blk->id != left_table->last_record_block_id) || (left_off < left_blk->offset)){
         if(left_off >= left_blk->offset){
             left_off = sizeof(block);
             get_next_block(left_blk->next_id, left_blk, left_pg, f);
@@ -419,11 +440,16 @@ void select_records_from_table_inner_join(table_to_join* left, table_to_join* ri
             char* r_string = calloc(1, 1);
             //Right table
 
-            read_page_from_file(f, right_pg, right_table->first_record_block_id);
+            uint32_t right_off = sizeof(block);
+            if(*right_block_off==0) {
+                read_page_from_file(f, right_pg, right_table->first_record_block_id);
+            } else {
+                read_page_from_file(f, right_pg, *right_block_off/db->block_size);
+                right_off = *right_block_off % db->block_size;
+            }
             block* right_blk = read_block_from_page(right_pg);
 
-            uint32_t right_off = sizeof(block);
-            for(uint32_t right_read_rows=0; right_read_rows < right_table->num_rows; right_read_rows++){
+            while((right_blk->id != right_table->last_record_block_id) || (right_off < right_blk->offset)){
                 if(right_off >= right_blk->offset){
                     right_off = sizeof(block);
                     get_next_block(right_blk->next_id, right_blk, right_pg, f);
@@ -524,8 +550,22 @@ void select_records_from_table_inner_join(table_to_join* left, table_to_join* ri
 
                     if (join_flag) {
                         string = simp_str_str(r_string, string);
-                        fprintf(fp, "%s", string);
-                        fprintf(fp, "\n");
+
+                        if(buffer_offset < buff_sz){
+                            memcpy(buffer+buffer_offset, string, strlen(string));
+                            buffer_offset += strlen(string);
+                            memcpy(buffer + buffer_offset, "\n", strlen("\n"));
+                            buffer_offset += strlen("\n");
+                            if(strlen(string) + 1 + buffer_offset >= buff_sz){
+                                memcpy(buffer + buffer_offset, "\0", strlen("\0"));
+                                *left_block_off = left_off + left_blk->id * db->block_size;
+                                *right_block_off = right_off + right_blk->id * db->block_size;
+                                return;
+                            }
+                        }
+
+                        //fprintf(fp, "%s", string);
+                        //fprintf(fp, "\n");
                     }
                 }
                 destroy_record(right_r);
@@ -535,6 +575,7 @@ void select_records_from_table_inner_join(table_to_join* left, table_to_join* ri
         }
         destroy_record(left_r);
     }
+    *left_block_off = 0;
     free(string);
     free(left_blk);
     destroy_page(left_pg);

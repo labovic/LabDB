@@ -64,10 +64,12 @@ union type_value {
     char* s;
 };
 
-void select_records_from_table(uint8_t num_cols, char** view_cols, condition* condition, table* tb, database* db, FILE* f, FILE* output);
+uint32_t select_records_from_table(uint32_t block_offset, char* buffer, uint32_t buff_sz, uint8_t num_cols, char** view_cols, condition* cond,
+                                   table* tb, database* db, FILE* f);
 void update_records_in_table(column_to_update* col, condition* cond, table* tb, database* db, FILE* f);
 void delete_records_from_table(condition* cond, table* tb, database* db, FILE* f);
-void select_records_from_table_inner_join(table_to_join* left, table_to_join* right, database* db, FILE* f, FILE* output);
+void select_records_from_table_inner_join(uint32_t* left_block_off, uint32_t* right_block_off, char* buffer, uint32_t buff_sz,
+                                          table_to_join* left, table_to_join* right, database* db, FILE* f);
 
 condition* create_integer_condition(char* name, enum relation relation, int32_t val);
 condition* create_float_condition(char* name, enum relation relation, float val);

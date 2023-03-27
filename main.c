@@ -93,29 +93,47 @@ void deletion_from_scheme() {
     column* col2 = create_column("name", STRING,MAX_NAME_LENGTH);
     column* col3 = create_column("height", FLOAT,sizeof(float));
     column* col4 = create_column("active", BOOL,sizeof(bool));
-    column** cols = create_columns(col1, col2, col3, col4);
 
-    char name[118];
+    column** cols1 = create_columns(col1, col2, col3, col4);
+    column** cols2 = create_columns(col1, col2, col4);
 
-    for (int i = 0; i < 25; i++) {
-        int k = 0;
-        while (k < 10000) {
-            sprintf(name, "tb%d%d", k, i);
-            table* tb = create_table(name, 4, cols);
-            insert_table_to_schema(tb, db, f);
 
-            free(tb);
-            k++;
+    table *tb1 = create_table("tb1", 4, cols1);
+    insert_table_to_schema(tb1, db, f);
+    initialize_table_record_block(tb1, db, f);
 
-        }
-        struct timeval start = getCurrentTime();
+    table *tb2 = create_table("tb2", 3, cols2);
+    insert_table_to_schema(tb2, db, f);
+    initialize_table_record_block(tb2, db, f);
 
-        sprintf(name, "tb%d%d", 10000, i);
-        delete_table_from_schema(name, db, f);
+    char* n[4] = {"id", "name", "active", "height"};
 
-        struct timeval end = getCurrentTime();
-        long long elapsed_time = time_diff_microseconds(start, end);
-        printf("Elapsed time: %lld microseconds.\n", elapsed_time);
+    table_to_join* left = create_table_to_join(tb1, 4, n, NULL, col1);
+    table_to_join* right = create_table_to_join(tb2, 3, n, NULL, col1);
+
+
+
+    for (int i = 0; i < 10; i++) {
+
+        record *r = create_record(tb1);
+        insert_integer_record(tb1, r, "id", i);
+        insert_string_record(tb1, r, "name", "Stefan");
+        insert_float_record(tb1, r, "height", 100.5f);
+        insert_boolean_record(tb1, r, "active", true);
+
+        insert_record_to_table(r, tb1, db, f);
+        destroy_record(r);
+    }
+
+    for (int j = 0; j < 10; j++) {
+
+        record *r = create_record(tb2);
+        insert_integer_record(tb2, r, "id", j);
+        insert_string_record(tb2, r, "name", "Bogdan");
+        insert_boolean_record(tb2, r, "active", false);
+
+        insert_record_to_table(r, tb2, db, f);
+        destroy_record(r);
     }
 
     fclose(f);
@@ -148,67 +166,45 @@ int main() {
     insert_table_to_schema(tb2, db, f);
     initialize_table_record_block(tb2, db, f);
 
-    FILE* fp = fopen("output.txt", "w");
-    if (fp == NULL) {
-        printf("Error: could not open file\n");
-        return 1;
-    }
-
     char* n[4] = {"id", "name", "active", "height"};
-
 
     table_to_join* left = create_table_to_join(tb1, 4, n, NULL, col1);
     table_to_join* right = create_table_to_join(tb2, 3, n, NULL, col1);
 
+    for (int i = 0; i < 100; i++) {
 
-    column_to_update* cu = create_integer_column_to_update("id", 0);
+        record *r = create_record(tb1);
+        insert_integer_record(tb1, r, "id", i);
+        insert_string_record(tb1, r, "name", "Stefan");
+        insert_float_record(tb1, r, "height", 100.5f);
+        insert_boolean_record(tb1, r, "active", true);
 
-    int k = 0;
-    for (int i = 0; i < 50; ++i) {
-
-        for (int j = 0; j < 50; j++) {
-
-            record *r = create_record(tb1);
-            insert_integer_record(tb1, r, "id", k);
-            insert_string_record(tb1, r, "name", "Stefan");
-            insert_float_record(tb1, r, "height", 100.5f);
-            insert_boolean_record(tb1, r, "active", true);
-
-            insert_record_to_table(r, tb1, db, f);
-            destroy_record(r);
-            k++;
-        }
-        k-=50;
-        for (int j = 0; j < 100; j++) {
-
-            record *r = create_record(tb2);
-            insert_integer_record(tb2, r, "id", k);
-            insert_string_record(tb2, r, "name", "Bogdan");
-            insert_boolean_record(tb2, r, "active", false);
-
-            insert_record_to_table(r, tb2, db, f);
-            destroy_record(r);
-            k++;
-        }
-
-        struct timeval start = getCurrentTime();
-
-        select_records_from_table_inner_join(left, right, db, f, fp);
-
-        struct timeval end = getCurrentTime();
-        float elapsed_time = time_diff_microseconds(start, end);
-        printf("%f\n", elapsed_time);
-
+        insert_record_to_table(r, tb1, db, f);
+        destroy_record(r);
     }
 
+    for (int j = 0; j < 100; j++) {
 
-        struct timeval start = getCurrentTime();
+        record *r = create_record(tb2);
+        insert_integer_record(tb2, r, "id", j);
+        insert_string_record(tb2, r, "name", "Bogdan");
+        insert_boolean_record(tb2, r, "active", false);
 
-        //select_records_from_table_inner_join(left, right,db,f,fp);
+        insert_record_to_table(r, tb2, db, f);
+        destroy_record(r);
+    }
 
-        struct timeval end = getCurrentTime();
-        float elapsed_time = time_diff_microseconds(start, end);
-        printf("%f\n", elapsed_time);
+    uint32_t left_off = 0;
+    uint32_t right_off = 0;
+    char buffer[100];
+    memset(buffer, 0, sizeof(buffer));
+
+    do {
+        select_records_from_table_inner_join(&left_off, &right_off,buffer, 100,left, right, db, f);
+        printf(buffer);
+        memset(buffer, 0, sizeof(buffer));
+    } while(left_off != 0);
+
 
 
     //condition* ic = create_integer_condition("id", MORE, 45);
@@ -218,16 +214,13 @@ int main() {
     //fc->next = ic;
 
 
-   // select_records_from_table(4, n,NULL,tb1, db, f, fp);
    // select_records_from_table(3, n,NULL,tb2, db, f, fp);
 
-    fclose(fp);
 
     //condition* c = create_integer_condition("id", EQUAL, k);
     //column_to_update* cu = create_integer_column_to_update("id", 5);
 
     free(tb1);
-    free(tb2);
     free(db->blk);
     free(db);
     destroy_page(db_pg);
@@ -238,8 +231,6 @@ int main() {
     free(cols1);
     free(cols2);
     fclose(f);
-    free(left);
-    free(right);
 
     return 0;
 
@@ -307,7 +298,7 @@ void select_test(database* db, FILE* f_in, FILE* f_out) {
 
         struct timeval start = getCurrentTime();
 
-        select_records_from_table(3, n, NULL, tb2, db, f_in, f_out);
+        //select_records_from_table(3, n, NULL, tb2, db, f_in, f_out);
 
         struct timeval end = getCurrentTime();
         float elapsed_time = time_diff_microseconds(start, end);
@@ -454,7 +445,7 @@ void join_test(database* db, FILE* f_in, FILE* f_out) {
 
         struct timeval start = getCurrentTime();
 
-        select_records_from_table_inner_join(left, right, db, f_in, f_out);
+        //select_records_from_table_inner_join(left, right, db, f_in, f_out);
 
         struct timeval end = getCurrentTime();
         float elapsed_time = time_diff_microseconds(start, end);
