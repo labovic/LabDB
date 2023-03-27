@@ -20,6 +20,8 @@ union type_value;
 
 enum query_type {SELECT, INSERT, UPDATE, DELETE};
 enum relation {EQUAL, NOT_EQUAL, LESS, MORE, LESS_EQUAL, MORE_EQUAL};
+enum next_relation {OR, AND, NONE};
+
 
 
 struct query {
@@ -55,6 +57,7 @@ struct condition {
     union type_value* value;
 
     condition* next;
+    enum next_relation next_relation;
 };
 
 union type_value {
@@ -71,10 +74,10 @@ void delete_records_from_table(condition* cond, table* tb, database* db, FILE* f
 void select_records_from_table_inner_join(uint32_t* left_block_off, uint32_t* right_block_off, char* buffer, uint32_t buff_sz,
                                           table_to_join* left, table_to_join* right, database* db, FILE* f);
 
-condition* create_integer_condition(char* name, enum relation relation, int32_t val);
-condition* create_float_condition(char* name, enum relation relation, float val);
-condition* create_bool_condition(char* name, enum relation relation, bool val);
-condition* create_string_condition(char* name, enum relation relation, char* val);
+condition* create_integer_condition(char* name, enum relation relation, int32_t val, enum next_relation next_relation);
+condition* create_float_condition(char* name, enum relation relation, float val, enum next_relation next_relation);
+condition* create_bool_condition(char* name, enum relation relation, bool val, enum next_relation next_relation);
+condition* create_string_condition(char* name, enum relation relation, char* val, enum next_relation next_relation);
 
 column_to_update* create_integer_column_to_update(char* name, int32_t val);
 column_to_update* create_float_column_to_update(char* name, float val);

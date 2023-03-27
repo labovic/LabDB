@@ -171,9 +171,7 @@ int main() {
     table_to_join* left = create_table_to_join(tb1, 4, n, NULL, col1);
     table_to_join* right = create_table_to_join(tb2, 3, n, NULL, col1);
 
-    table* tb = get_table_from_schema("tb1", db, f);
-
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 1000; i++) {
 
         record *r = create_record(tb1);
         insert_integer_record(tb1, r, "id", i);
@@ -184,7 +182,6 @@ int main() {
         insert_record_to_table(r, tb1, db, f);
         destroy_record(r);
     }
-    get_table_from_schema("tb1", db , f);
     for (int j = 0; j < 100; j++) {
 
         record *r = create_record(tb2);
@@ -197,13 +194,25 @@ int main() {
     }
 
     uint32_t left_off = 0;
-    uint32_t right_off = 0;
-    char buffer[100];
+    //uint32_t right_off = 0;
+    char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
 
+
+    condition* ic = create_integer_condition("id", MORE, 45, OR);
+    condition* ic2 = create_integer_condition("id", MORE, 35, NONE);
+    condition* ic3 = create_integer_condition("id", MORE, 20, AND);
+    condition* ic4 = create_integer_condition("id", MORE, 15, OR);
+    ic->next = ic2;
+    ic2->next = ic3;
+    ic3->next = ic4;
+
+    table* tb = get_table_from_schema("tb1", db, f);
+
     do {
-        select_records_from_table_inner_join(&left_off, &right_off,buffer, 100,left, right, db, f);
-        printf(buffer);
+        //select_records_from_table_inner_join(&left_off, &right_off,buffer, 100,left, right, db, f);
+        left_off = select_records_from_table(left_off, buffer, 1024, 4, n, ic,tb, db, f);
+        printf("%s", buffer);
         memset(buffer, 0, sizeof(buffer));
     } while(left_off != 0);
 
@@ -338,8 +347,8 @@ void delete_test(database* db, FILE* f_in) {
 
         struct timeval start = getCurrentTime();
 
-        condition* ic1 = create_integer_condition("id", MORE, i*5000);
-        condition* ic2 = create_integer_condition("id", LESS_EQUAL, i*5000 + 5000);
+        condition* ic1 = create_integer_condition("id", MORE, i*5000, NONE);
+        condition* ic2 = create_integer_condition("id", LESS_EQUAL, i*5000 + 5000, NONE);
         ic1->next = ic2;
 
         delete_records_from_table(ic1, tb2, db, f_in);
@@ -380,8 +389,8 @@ void update_test(database* db, FILE* f_in) {
 
         struct timeval start = getCurrentTime();
 
-        condition* ic1 = create_integer_condition("id", MORE, i*5000);
-        condition* ic2 = create_integer_condition("id", LESS_EQUAL, i*5000 + 5000);
+        condition* ic1 = create_integer_condition("id", MORE, i*5000, NONE);
+        condition* ic2 = create_integer_condition("id", LESS_EQUAL, i*5000 + 5000, NONE);
         ic1->next = ic2;
 
         update_records_in_table(cu, ic1, tb2, db, f_in);

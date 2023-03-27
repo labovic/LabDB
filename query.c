@@ -19,7 +19,7 @@ table_to_join* create_table_to_join(table* tb,
     tj->col_to_join = col_to_join;
 }
 
-condition* create_integer_condition(char* name, enum relation relation, int32_t val){
+condition* create_integer_condition(char* name, enum relation relation, int32_t val, enum next_relation next_relation){
     condition* c = calloc(1, sizeof(condition));
     c->col_name = name;
     c->type = INTEGER;
@@ -27,11 +27,12 @@ condition* create_integer_condition(char* name, enum relation relation, int32_t 
     c->relation = relation;
     c->value = calloc(1, c->size);
     c->value->i = val;
+    c->next_relation = next_relation;
     c->next = NULL;
     return c;
 }
 
-condition* create_float_condition(char* name, enum relation relation, float val){
+condition* create_float_condition(char* name, enum relation relation, float val, enum next_relation next_relation){
     condition* c = calloc(1, sizeof(condition));
     c->col_name = name;
     c->type = FLOAT;
@@ -39,11 +40,12 @@ condition* create_float_condition(char* name, enum relation relation, float val)
     c->relation = relation;
     c->value = calloc(1, c->size);
     c->value->f = val;
+    c->next_relation = next_relation;
     c->next = NULL;
     return c;
 }
 
-condition* create_bool_condition(char* name, enum relation relation, bool val){
+condition* create_bool_condition(char* name, enum relation relation, bool val, enum next_relation next_relation){
     condition* c = calloc(1, sizeof(condition));
     c->col_name = name;
     c->type = BOOL;
@@ -51,11 +53,12 @@ condition* create_bool_condition(char* name, enum relation relation, bool val){
     c->relation = relation;
     c->value = calloc(1, c->size);
     c->value->b = val;
+    c->next_relation = next_relation;
     c->next = NULL;
     return c;
 }
 
-condition* create_string_condition(char* name, enum relation relation, char* val){
+condition* create_string_condition(char* name, enum relation relation, char* val, enum next_relation next_relation){
     condition* c = calloc(1, sizeof(condition));
     c->col_name = name;
     c->type = STRING;
@@ -63,6 +66,7 @@ condition* create_string_condition(char* name, enum relation relation, char* val
     c->relation = relation;
     c->value = calloc(1, c->size);
     c->value->s = val;
+    c->next_relation = next_relation;
     c->next = NULL;
     return c;
 }
@@ -294,38 +298,73 @@ uint32_t select_records_from_table(uint32_t block_offset, char* buffer, uint32_t
 
         bool flag = true;
         condition* temp = cond;
+        enum next_relation next_relation = NONE;
+        bool met_condition;
         while(temp != NULL) {
 
             switch (temp->type) {
                 case INTEGER:;
                     int32_t i_n = get_integer_record(tb, r, temp->col_name);
-                    if(!check_integers(i_n, temp->value->i, temp->relation)){
-                        flag = false;
+                    met_condition = check_integers(i_n, temp->value->i, temp->relation);
+                    switch (next_relation) {
+                        case OR:
+                            flag = flag || met_condition;
+                            break;
+                        case AND:;
+                            flag = flag && met_condition;
+                            break;
+                        case NONE:
+                            flag = flag && met_condition;
+                            break;
                     }
                     break;
                 case FLOAT:;
                     float f_n = get_float_record(tb, r, temp->col_name);
-                    if(!check_floats(f_n, temp->value->f, temp->relation)){
-                        flag = false;
+                    met_condition = check_floats(f_n, temp->value->f, temp->relation);
+                    switch (next_relation) {
+                        case OR:
+                            flag = flag || met_condition;
+                            break;
+                        case AND:;
+                            flag = flag && met_condition;
+                            break;
+                        case NONE:
+                            flag = flag && met_condition;
+                            break;
                     }
                     break;
                 case BOOL:;
                     bool b_n = get_boolean_record(tb, r, temp->col_name);
-                    if(!check_bools(b_n, temp->value->b, temp->relation)){
-                        flag = false;
+                    met_condition = check_bools(b_n, temp->value->b, temp->relation);
+                    switch (next_relation) {
+                        case OR:
+                            flag = flag || met_condition;
+                            break;
+                        case AND:;
+                            flag = flag && met_condition;
+                            break;
+                        case NONE:
+                            flag = flag && met_condition;
+                            break;
                     }
                     break;
                 case STRING:;
                     char* s = get_string_record(tb, r, temp->col_name);
-                    if(!check_strings(s, temp->value->s, temp->relation)){
-                        flag = false;
+                    met_condition = check_strings(s, temp->value->s, temp->relation);
+                    switch (next_relation) {
+                        case OR:
+                            flag = flag || met_condition;
+                            break;
+                        case AND:;
+                            flag = flag && met_condition;
+                            break;
+                        case NONE:
+                            flag = flag && met_condition;
+                            break;
                     }
                     break;
             }
-
-            if(!flag) {
-                break;
-            }
+            next_relation = temp->next_relation;
             temp = temp->next;
         }
 
