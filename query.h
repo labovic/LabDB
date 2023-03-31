@@ -14,14 +14,16 @@ typedef struct join_query join_query;
 typedef struct condition condition;
 typedef struct column_to_update column_to_update;
 typedef struct table_to_join table_to_join;
+typedef struct condition_operand condition_operand;
 
 union type_value;
 
 
 enum query_type {SELECT, INSERT, UPDATE, DELETE};
-enum relation {EQUAL, NOT_EQUAL, LESS, MORE, LESS_EQUAL, MORE_EQUAL};
+enum relation {EQUAL, NOT_EQUAL, LESS, MORE, LESS_EQUAL, MORE_EQUAL, LIKE};
 enum next_relation {OR, AND, NONE};
-
+enum condition_type {COLUMN_VALUE, COLUMN_COLUMN, VALUE_COLUMN,VALUE_VALUE};
+enum belongs_to_table {LEFT, RIGHT};
 
 
 struct query {
@@ -35,7 +37,6 @@ struct table_to_join {
     table* tb;
     uint8_t num_cols;
     char** view_cols;
-    condition* cond;
 
     column* col_to_join;
 };
@@ -50,14 +51,21 @@ struct column_to_update {
 };
 
 struct condition {
-    char* col_name;
-    enum data_type type;
-    uint32_t size;
+    enum condition_type type;
+    enum belongs_to_table belongs_to_table;
+
+    condition_operand* left_operand;
+    condition_operand* right_operand;
     enum relation relation;
-    union type_value* value;
 
     condition* next;
     enum next_relation next_relation;
+};
+
+struct condition_operand {
+    enum data_type type;
+    uint32_t size;
+    union type_value* value;
 };
 
 union type_value {
@@ -72,12 +80,20 @@ uint32_t select_records_from_table(uint32_t block_offset, char* buffer, uint32_t
 void update_records_in_table(column_to_update* col, condition* cond, table* tb, database* db, FILE* f);
 void delete_records_from_table(condition* cond, table* tb, database* db, FILE* f);
 void select_records_from_table_inner_join(uint32_t* left_block_off, uint32_t* right_block_off, char* buffer, uint32_t buff_sz,
-                                          table_to_join* left, table_to_join* right, database* db, FILE* f);
+                                          table_to_join* left, table_to_join* right, condition* cond,
+                                          database* db, FILE* f);
 
-condition* create_integer_condition(char* name, enum relation relation, int32_t val, enum next_relation next_relation);
-condition* create_float_condition(char* name, enum relation relation, float val, enum next_relation next_relation);
-condition* create_bool_condition(char* name, enum relation relation, bool val, enum next_relation next_relation);
-condition* create_string_condition(char* name, enum relation relation, char* val, enum next_relation next_relation);
+condition* create_condition(enum condition_type type, condition_operand* left_operand,
+                            condition_operand* right_operand, enum relation relation,
+                            enum next_relation next_relation);
+condition* create_condition_join(enum belongs_to_table btt, enum condition_type type, condition_operand* left_operand,
+                                 condition_operand* right_operand, enum relation relation,
+                                 enum next_relation next_relation);
+
+condition_operand * create_condition_integer_operand(int32_t value);
+condition_operand * create_condition_float_operand(float value);
+condition_operand * create_condition_bool_operand(bool value);
+condition_operand * create_condition_string_operand(char* value);
 
 column_to_update* create_integer_column_to_update(char* name, int32_t val);
 column_to_update* create_float_column_to_update(char* name, float val);

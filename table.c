@@ -91,6 +91,15 @@ column* get_column_by_name(table* tb, char* column_name) {
     return NULL;
 }
 
+enum data_type get_column_type_by_name(table* tb, char* column_name) {
+    for (int i = 0; i < tb->num_columns; i++) {
+        if(strcmp(tb->columns[i]->name,column_name) == 0) {
+            return tb->columns[i]->type;
+        }
+    }
+    return 0;
+}
+
 uint32_t get_column_offset_by_name(table* tb, char* column_name) {
     uint32_t offset = 0;
     for (int i = 0; i < tb->num_columns; i++) {
@@ -170,9 +179,9 @@ char* get_string_record(table* tb, record* r, char* column_name) {
 /* To string functions */
 
 char* integer_to_string(uint32_t value, char* dest){
-    size_t size = snprintf(NULL, 0, " %d |", value)+1;
+    size_t size = snprintf(NULL, 0, " %5d |", value)+1;
     char* temp = calloc(1, size);
-    snprintf(temp, size, " %d |", value);
+    snprintf(temp, size, " %5d |", value);
 
     dest = realloc(dest, strlen(dest) + strlen(temp) + 1);
     strcat(dest, temp);

@@ -271,19 +271,19 @@ void write_to_last_record_block(FILE* f, page* curr_pg, block* curr_blk, page* l
         record* r = read_record_from_page(tb, curr_pg, read_off);
         if(r->valid){
             if(last_blk->id != curr_blk->id) {
-                if ((last_blk->offset + get_columns_size(tb)) < db->block_size) {
+                if ((last_blk->offset + get_record_size(tb)) < db->block_size) {
                     write_record_to_page(r, last_pg, last_blk->offset, get_columns_size(tb));
-                    last_blk->offset += get_columns_size(tb);
+                    last_blk->offset += get_record_size(tb);
                 } else {
                     write_record_to_page(r, curr_pg, off, get_columns_size(tb));
-                    off += get_columns_size(tb);
+                    off += get_record_size(tb);
                 }
             } else {
                 write_record_to_page(r, curr_pg, off, get_columns_size(tb));
-                off += get_columns_size(tb);
+                off += get_record_size(tb);
             }
         }
-        read_off += get_columns_size(tb);
+        read_off += get_record_size(tb);
     }
 
     curr_blk->offset = off;

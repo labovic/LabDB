@@ -59,6 +59,7 @@ float get_float_record(table* tb, record* r, char* column_name);
 bool get_boolean_record(table* tb, record* r, char* column_name);
 
 column* get_column_by_name(table* tb, char* column_name);
+enum data_type get_column_type_by_name(table* tb, char* column_name);
 uint8_t get_column_size_by_name(table* tb, char* column_name);
 uint32_t get_columns_size(table* tb);
 size_t get_real_table_size(table* tb);

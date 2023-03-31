@@ -93,12 +93,13 @@ void deletion_from_scheme() {
     column* col2 = create_column("name", STRING,MAX_NAME_LENGTH);
     column* col3 = create_column("height", FLOAT,sizeof(float));
     column* col4 = create_column("active", BOOL,sizeof(bool));
+    column* col5 = create_column("age", INTEGER,sizeof(int32_t));
 
-    column** cols1 = create_columns(col1, col2, col3, col4);
+    column** cols1 = create_columns(col1, col2, col3, col4, col5);
     column** cols2 = create_columns(col1, col2, col4);
 
 
-    table *tb1 = create_table("tb1", 4, cols1);
+    table *tb1 = create_table("tb1", 5, cols1);
     insert_table_to_schema(tb1, db, f);
     initialize_table_record_block(tb1, db, f);
 
@@ -120,6 +121,7 @@ void deletion_from_scheme() {
         insert_string_record(tb1, r, "name", "Stefan");
         insert_float_record(tb1, r, "height", 100.5f);
         insert_boolean_record(tb1, r, "active", true);
+        insert_integer_record(tb1, r, "age", 18);
 
         insert_record_to_table(r, tb1, db, f);
         destroy_record(r);
@@ -153,12 +155,12 @@ int main() {
     column* col2 = create_column("name", STRING,MAX_NAME_LENGTH);
     column* col3 = create_column("height", FLOAT,sizeof(float));
     column* col4 = create_column("active", BOOL,sizeof(bool));
+    column* col5 = create_column("age", INTEGER,sizeof(int32_t));
 
-    column** cols1 = create_columns(col1, col2, col3, col4);
+    column* cols1[5] = {col1, col2, col3, col4, col5};
     column** cols2 = create_columns(col1, col2, col4);
 
-
-    table *tb1 = create_table("tb1", 4, cols1);
+    table *tb1 = create_table("tb1", 5, cols1);
     insert_table_to_schema(tb1, db, f);
     initialize_table_record_block(tb1, db, f);
 
@@ -166,10 +168,8 @@ int main() {
     insert_table_to_schema(tb2, db, f);
     initialize_table_record_block(tb2, db, f);
 
-    char* n[4] = {"id", "name", "active", "height"};
+    char* n[5] = {"id", "name", "active", "height", "age"};
 
-    table_to_join* left = create_table_to_join(tb1, 4, n, NULL, col1);
-    table_to_join* right = create_table_to_join(tb2, 3, n, NULL, col1);
 
     for (int i = 0; i < 1000; i++) {
 
@@ -178,6 +178,8 @@ int main() {
         insert_string_record(tb1, r, "name", "Stefan");
         insert_float_record(tb1, r, "height", 100.5f);
         insert_boolean_record(tb1, r, "active", true);
+        insert_integer_record(tb1, r, "age", 18);
+
 
         insert_record_to_table(r, tb1, db, f);
         destroy_record(r);
@@ -194,42 +196,42 @@ int main() {
     }
 
     uint32_t left_off = 0;
-    //uint32_t right_off = 0;
+    uint32_t right_off = 0;
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
 
+    condition_operand* lco = create_condition_string_operand("id");
+    condition_operand* rco = create_condition_string_operand("age");
+    condition* ic = create_condition_join(LEFT,COLUMN_COLUMN, lco, rco, LESS_EQUAL, NONE);
 
-    condition* ic = create_integer_condition("id", MORE, 45, OR);
-    condition* ic2 = create_integer_condition("id", MORE, 35, NONE);
-    condition* ic3 = create_integer_condition("id", MORE, 20, AND);
-    condition* ic4 = create_integer_condition("id", MORE, 15, OR);
-    ic->next = ic2;
-    ic2->next = ic3;
-    ic3->next = ic4;
+    condition_operand* lco2 = create_condition_string_operand("id");
+    condition_operand* rco2 = create_condition_integer_operand(10);
+    condition* ic2 = create_condition_join(RIGHT,COLUMN_VALUE, lco2, rco2, MORE_EQUAL, NONE);
+
+    condition_operand* lco3 = create_condition_string_operand("name");
+    condition_operand* rco3 = create_condition_string_operand("Stefa");
+    condition* sc = create_condition_join(LEFT, COLUMN_VALUE, lco3, rco3, LIKE, NONE);
+
+    //ic->next = ic2;
+
 
     table* tb = get_table_from_schema("tb1", db, f);
 
+    //column_to_update* colcc = create_integer_column_to_update("id", 5);
+    //update_records_in_table(colcc, ic, tb, db, f);
+    //delete_records_from_table(ic, tb, db, f);
+
+    table_to_join* left = create_table_to_join(tb, 4, n, NULL, col1);
+    table_to_join* right = create_table_to_join(tb2, 3, n, NULL, col1);
+
     do {
-        //select_records_from_table_inner_join(&left_off, &right_off,buffer, 100,left, right, db, f);
-        left_off = select_records_from_table(left_off, buffer, 1024, 4, n, ic,tb, db, f);
+        select_records_from_table_inner_join(&left_off, &right_off,buffer, 1024,left, right, sc,db, f);
+        //left_off = select_records_from_table(left_off, buffer, 1024, 5, n, ic2,tb, db, f);
         printf("%s", buffer);
         memset(buffer, 0, sizeof(buffer));
     } while(left_off != 0);
 
 
-
-    //condition* ic = create_integer_condition("id", MORE, 45);
-    //condition* sc = create_string_condition("name", EQUAL, "Stefan");
-    //condition* fc = create_float_condition("height", MORE_EQUAL, 100.0f);
-    //condition* bc = create_bool_condition("active", NOT_EQUAL, false);
-    //fc->next = ic;
-
-
-   // select_records_from_table(3, n,NULL,tb2, db, f, fp);
-
-
-    //condition* c = create_integer_condition("id", EQUAL, k);
-    //column_to_update* cu = create_integer_column_to_update("id", 5);
 
     free(tb1);
     free(db->blk);
@@ -239,7 +241,6 @@ int main() {
     free(col2);
     free(col3);
     free(col4);
-    free(cols1);
     free(cols2);
     fclose(f);
 
@@ -347,11 +348,11 @@ void delete_test(database* db, FILE* f_in) {
 
         struct timeval start = getCurrentTime();
 
-        condition* ic1 = create_integer_condition("id", MORE, i*5000, NONE);
-        condition* ic2 = create_integer_condition("id", LESS_EQUAL, i*5000 + 5000, NONE);
-        ic1->next = ic2;
+        //condition* ic1 = create_integer_condition("id", MORE, i*5000, NONE);
+        //condition* ic2 = create_integer_condition("id", LESS_EQUAL, i*5000 + 5000, NONE);
+        //ic1->next = ic2;
 
-        delete_records_from_table(ic1, tb2, db, f_in);
+        //delete_records_from_table(ic1, tb2, db, f_in);
 
         struct timeval end = getCurrentTime();
         float elapsed_time = time_diff_microseconds(start, end);
@@ -389,11 +390,11 @@ void update_test(database* db, FILE* f_in) {
 
         struct timeval start = getCurrentTime();
 
-        condition* ic1 = create_integer_condition("id", MORE, i*5000, NONE);
-        condition* ic2 = create_integer_condition("id", LESS_EQUAL, i*5000 + 5000, NONE);
-        ic1->next = ic2;
+        //condition* ic1 = create_integer_condition("id", MORE, i*5000, NONE);
+        //condition* ic2 = create_integer_condition("id", LESS_EQUAL, i*5000 + 5000, NONE);
+        //ic1->next = ic2;
 
-        update_records_in_table(cu, ic1, tb2, db, f_in);
+        //update_records_in_table(cu, ic1, tb2, db, f_in);
 
         struct timeval end = getCurrentTime();
         float elapsed_time = time_diff_microseconds(start, end);
